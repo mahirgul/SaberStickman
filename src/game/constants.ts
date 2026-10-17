@@ -1,7 +1,54 @@
-import { SaberColorConfig, ComboMove, SlashType } from '../types/game';
+import { SaberColorConfig, ComboMove, SlashType, DifficultyMode, DifficultyConfig } from '../types/game';
 
-export const SABER_MAX_TIME = 60; // Max 60 seconds
-export const SABER_PICKUP_TIME = 5; // Adds 5 seconds per pickup
+export const DIFFICULTY_CONFIGS: Record<DifficultyMode, DifficultyConfig> = {
+  CASUAL: {
+    id: 'CASUAL',
+    name: 'Casual (Kolay)',
+    badge: '45s · Relaxed',
+    description: '45s starter saber, +15s per pickup, max 120s! Relaxed timer for stress-free slicing.',
+    starterTimer: 45,
+    pickupBonus: 15,
+    maxTimer: 120,
+    isInfinite: false,
+    scoreMultiplier: 1.0,
+  },
+  NORMAL: {
+    id: 'NORMAL',
+    name: 'Normal (Dengeli)',
+    badge: '30s · Balanced',
+    description: '30s starter saber, +10s per pickup, max 60s. The balanced arcade experience.',
+    starterTimer: 30,
+    pickupBonus: 10,
+    maxTimer: 60,
+    isInfinite: false,
+    scoreMultiplier: 1.25,
+  },
+  HARDCORE: {
+    id: 'HARDCORE',
+    name: 'Hardcore (Zor)',
+    badge: '15s · Hard',
+    description: '15s starter saber, +5s per pickup, max 60s. Fast-paced survival challenge.',
+    starterTimer: 15,
+    pickupBonus: 5,
+    maxTimer: 60,
+    isInfinite: false,
+    scoreMultiplier: 1.75,
+  },
+  INFINITE: {
+    id: 'INFINITE',
+    name: 'Infinite Saber (Sonsuz)',
+    badge: '∞ No Timer',
+    description: 'Lightsaber timer never depletes! Pure combat action without time pressure.',
+    starterTimer: 999,
+    pickupBonus: 0,
+    maxTimer: 999,
+    isInfinite: true,
+    scoreMultiplier: 0.9,
+  },
+};
+
+export const SABER_MAX_TIME = 60; // Default max 60 seconds
+export const SABER_PICKUP_TIME = 5; // Default adds 5 seconds per pickup
 
 export const SABER_COLORS: SaberColorConfig[] = [
   {
@@ -58,8 +105,8 @@ export const COMBO_MOVES: Record<SlashType, ComboMove> = {
   UP: {
     id: 'UP',
     name: 'Crescent Sky Slash',
-    keys: 'C',
-    description: 'Upward vertical arc launching flying drones and jumping enemies into the air',
+    keys: 'V',
+    description: 'Upward vertical arc launching flying drones and airborne foes into the air',
     damage: 35,
     energyGain: 12,
     stunChance: 0.15,
@@ -70,7 +117,7 @@ export const COMBO_MOVES: Record<SlashType, ComboMove> = {
   MID: {
     id: 'MID',
     name: 'Plasma Cross Cleave',
-    keys: 'X',
+    keys: 'C',
     description: 'Dashes forward, bisecting enemies with swift dual-slash cross strikes',
     damage: 42,
     energyGain: 15,
@@ -82,7 +129,7 @@ export const COMBO_MOVES: Record<SlashType, ComboMove> = {
   DOWN: {
     id: 'DOWN',
     name: 'Ground Shockwave Sweep',
-    keys: 'Z',
+    keys: 'X',
     description: 'Low crouching sweep sending a ground wave that shatters enemy shields',
     damage: 38,
     energyGain: 14,
@@ -127,10 +174,47 @@ export const COMBO_MOVES: Record<SlashType, ComboMove> = {
     rangeX: 120,
     rangeY: 100,
   },
+  COMBO_CV: {
+    id: 'COMBO_CV',
+    name: 'Rising Spiral Blade (CV)',
+    keys: 'C + V',
+    description: 'Leaping spiral whirlwind launching player skyward while slicing airborne foes',
+    damage: 85,
+    energyGain: 28,
+    stunChance: 0.50,
+    duration: 300,
+    rangeX: 140,
+    rangeY: 90,
+  },
+  COMBO_XV: {
+    id: 'COMBO_XV',
+    name: 'Eclipse Cross Burst (XV)',
+    keys: 'X + V',
+    description: 'Carves an explosive X-shaped plasma detonation into the battlefield',
+    damage: 95,
+    energyGain: 32,
+    stunChance: 0.65,
+    duration: 350,
+    rangeX: 130,
+    rangeY: 100,
+  },
   ULTIMATE_ZXC: {
     id: 'ULTIMATE_ZXC',
-    name: 'OMEGA DIMENSION CLEAVE (ZXC)',
-    keys: 'Z + X + C',
+    name: 'OMEGA DIMENSION CLEAVE (XCV)',
+    keys: 'X + C + V',
+    description: 'Freezes time and unleashes 7 lethal screen-wide neon cuts! Stuns bosses instantly.',
+    damage: 260,
+    energyGain: 0,
+    stunChance: 1.0,
+    duration: 800,
+    rangeX: 450,
+    rangeY: 300,
+    isUltimate: true,
+  },
+  ULTIMATE_XCV: {
+    id: 'ULTIMATE_XCV',
+    name: 'OMEGA DIMENSION CLEAVE (XCV)',
+    keys: 'X + C + V',
     description: 'Freezes time and unleashes 7 lethal screen-wide neon cuts! Stuns bosses instantly.',
     damage: 260,
     energyGain: 0,

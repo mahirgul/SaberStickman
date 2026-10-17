@@ -800,17 +800,17 @@ export class GameRenderer {
         // Vortex 360 Cyclone
         saberAngle = progress * Math.PI * 4;
         this.renderVortexTrail(cfg, allowGlow);
-      } else if (type === 'COMBO_XZ') {
-        // Hyper thrust beam
-        saberAngle = 0;
+      } else if (type === 'COMBO_XZ' || type === 'COMBO_CV') {
+        // Hyper thrust / Leaping spiral beam
+        saberAngle = type === 'COMBO_CV' ? progress * Math.PI * 2 : 0;
         handX = 22;
-        handY = 0;
+        handY = type === 'COMBO_CV' ? -progress * 12 : 0;
         this.renderThrustBeam(cfg, allowGlow);
-      } else if (type === 'COMBO_CZ') {
+      } else if (type === 'COMBO_CZ' || type === 'COMBO_XV') {
         // Cross Eclipse "X" slash
         saberAngle = -0.8 + progress * 2.5;
         this.renderCrossEclipse(cfg, progress, allowGlow);
-      } else if (type === 'ULTIMATE_ZXC') {
+      } else if (type === 'ULTIMATE_ZXC' || type === 'ULTIMATE_XCV') {
         // OMEGA DIMENSION ULTIMATE
         saberAngle = progress * Math.PI * 6;
         this.renderOmegaUltimate(cfg, progress, allowGlow);

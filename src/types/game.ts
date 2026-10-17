@@ -11,7 +11,17 @@ export interface SaberColorConfig {
   unlockScore: number;
 }
 
-export type SlashType = 'UP' | 'MID' | 'DOWN' | 'COMBO_XC' | 'COMBO_XZ' | 'COMBO_CZ' | 'ULTIMATE_ZXC';
+export type SlashType =
+  | 'UP'
+  | 'MID'
+  | 'DOWN'
+  | 'COMBO_XC'
+  | 'COMBO_XZ'
+  | 'COMBO_CZ'
+  | 'COMBO_CV'
+  | 'COMBO_XV'
+  | 'ULTIMATE_ZXC'
+  | 'ULTIMATE_XCV';
 
 export interface ComboMove {
   id: SlashType;
@@ -170,6 +180,20 @@ export interface GameStats {
   stage: number;
 }
 
+export type DifficultyMode = 'CASUAL' | 'NORMAL' | 'HARDCORE' | 'INFINITE';
+
+export interface DifficultyConfig {
+  id: DifficultyMode;
+  name: string;
+  badge: string;
+  description: string;
+  starterTimer: number;
+  pickupBonus: number;
+  maxTimer: number;
+  isInfinite: boolean;
+  scoreMultiplier: number;
+}
+
 export interface UserSaveData {
   syncCode: string;
   playerName: string;
@@ -183,6 +207,7 @@ export interface UserSaveData {
   audioVolume: number;
   isMuted: boolean;
   quality: GraphicQuality;
+  difficulty: DifficultyMode;
   updatedAt: string;
 }
 

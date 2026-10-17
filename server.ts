@@ -159,6 +159,31 @@ function saveProfilesToDisk() {
 loadLeaderboardFromDisk();
 loadProfilesFromDisk();
 
+// Prevent caching on all responses, especially HTML and API
+app.use((_req, res, next) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
+
+// GET /api/version - Version status check for the Reload Center
+app.get('/api/version', (_req, res) => {
+  res.json({
+    version: '1.3.4',
+    build: '2026.10-edge',
+    name: 'Saber Stickman: Neon Edge',
+    features: [
+      'XCV German/Standard Keyboards',
+      'Difficulty & Infinite Saber Selection',
+      'Smart Enemy Ledge AI',
+      'Landscape Mobile Twin-Side Controls',
+      'Reload & Update Center',
+    ],
+    timestamp: Date.now(),
+  });
+});
+
 // --- API ROUTES ---
 
 // GET /api/leaderboard (with optional ?timeframe=all|week|today and ?search=...)

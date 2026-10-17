@@ -12,6 +12,8 @@ import { GameOverModal } from './components/GameOverModal';
 import { LeaderboardModal } from './components/LeaderboardModal';
 import { CloudSyncModal } from './components/CloudSyncModal';
 import { PauseModal } from './components/PauseModal';
+import { RotatePrompt } from './components/RotatePrompt';
+import { RefreshPageModal } from './components/RefreshPageModal';
 import {
   GameState,
   GameStats,
@@ -20,7 +22,7 @@ import {
   UserSaveData,
   SaberColor,
   GraphicQuality,
-  SlashType,
+  DifficultyMode,
 } from './types/game';
 import { loadLocalSave, saveLocal, syncToCloud } from './services/cloudStorage';
 import { sound } from './audio/soundEngine';
@@ -80,6 +82,17 @@ export default function App() {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showCloudSync, setShowCloudSync] = useState(false);
   const [showTouchControls, setShowTouchControls] = useState(false);
+  const [showRefreshModal, setShowRefreshModal] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const search = window.location.search.toLowerCase();
+      return (
+        search.includes('page=refresh') ||
+        search.includes('action=reload') ||
+        search.includes('yenile')
+      );
+    }
+    return false;
+  });
 
   // Initialize Canvas & Game Engine once
   useEffect(() => {
@@ -98,6 +111,7 @@ export default function App() {
 
     engine.setSaberColor(saveData.selectedSaberColor);
     engine.setGraphicQuality(quality);
+    engine.setDifficulty(saveData.difficulty || 'NORMAL');
 
     const handleResize = () => {
       engine.resize(window.innerWidth, window.innerHeight);
@@ -117,7 +131,6 @@ export default function App() {
       setGameState(newState);
       if (newState === 'GAME_OVER') {
         // Record high score and save
-        const isNewBest = engine.stats.score > saveData.highScore;
         const updated: UserSaveData = {
           ...saveData,
           highScore: Math.max(saveData.highScore, engine.stats.score),
@@ -229,17 +242,35 @@ export default function App() {
     }
   };
 
+  const handleSelectDifficulty = (diff: DifficultyMode) => {
+    const updated = { ...saveData, difficulty: diff };
+    setSaveData(updated);
+    saveLocal(updated);
+    if (engineRef.current) {
+      engineRef.current.setDifficulty(diff);
+    }
+  };
+
   const handleUpdateSave = (newData: UserSaveData) => {
     setSaveData(newData);
     if (engineRef.current) {
       engineRef.current.setSaberColor(newData.selectedSaberColor);
       engineRef.current.setGraphicQuality(newData.quality);
+      engineRef.current.setDifficulty(newData.difficulty || 'NORMAL');
     }
   };
 
   const handleTriggerUltimate = () => {
     if (engineRef.current) {
       engineRef.current.triggerSpecialCombo('ULTIMATE_ZXC');
+    }
+  };
+
+  const handleSoftReset = () => {
+    if (engineRef.current) {
+      engineRef.current.stop();
+      engineRef.current.startGame();
+      setGameState('PLAYING');
     }
   };
 
@@ -258,7 +289,9 @@ export default function App() {
           onStart={handleStartGame}
           onOpenLeaderboard={() => setShowLeaderboard(true)}
           onOpenCloudSync={() => setShowCloudSync(true)}
+          onOpenRefreshPage={() => setShowRefreshModal(true)}
           onSelectSaberColor={handleSelectSaberColor}
+          onSelectDifficulty={handleSelectDifficulty}
           isMuted={isMuted}
           onToggleMute={handleToggleMute}
         />
@@ -281,16 +314,30 @@ export default function App() {
         />
       )}
 
-      {/* 4. Touch Controls (Mobile / Tablet / Responsive) */}
+      {/* 4. Touch Controls (Mobile Landscape: 2 Left Buttons + 2 Right Buttons) */}
       {gameState === 'PLAYING' && showTouchControls && (
         <TouchControls
+          onMoveLeftStart={() => {
+            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
+          }}
+          onMoveLeftEnd={() => {
+            window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowLeft' }));
+          }}
+          onMoveRightStart={() => {
+            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+          }}
+          onMoveRightEnd={() => {
+            window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowRight' }));
+          }}
           onJumpStart={() => engineRef.current?.triggerTouchJump()}
           onJumpEnd={() => engineRef.current?.releaseTouchJump()}
-          onSlash={(type) => engineRef.current?.triggerTouchSlash(type)}
-          onCombo={(combo) => engineRef.current?.triggerSpecialCombo(combo)}
+          onAttack={() => engineRef.current?.triggerSmartTouchAttack()}
           isUltimateReady={player.energy >= 75}
         />
       )}
+
+      {/* Mobile Landscape Orientation Prompt */}
+      <RotatePrompt />
 
       {/* 5. Pause Modal */}
       {gameState === 'PAUSED' && (
@@ -298,6 +345,7 @@ export default function App() {
           onResume={handleResume}
           onRestart={handleRestart}
           onHome={handleHome}
+          onOpenRefreshPage={() => setShowRefreshModal(true)}
           isMuted={isMuted}
           onToggleMute={handleToggleMute}
           quality={quality}
@@ -330,6 +378,14 @@ export default function App() {
           saveData={saveData}
           onUpdateSave={handleUpdateSave}
           onClose={() => setShowCloudSync(false)}
+        />
+      )}
+
+      {/* 9. Dedicated Refresh & Update Center Modal */}
+      {showRefreshModal && (
+        <RefreshPageModal
+          onClose={() => setShowRefreshModal(false)}
+          onSoftReset={handleSoftReset}
         />
       )}
     </div>

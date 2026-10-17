@@ -94,7 +94,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
               onClick={onTriggerUltimate}
               className="pointer-events-auto mt-1 py-1 px-2.5 bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 text-white text-[11px] font-bold rounded-lg tracking-wider text-center transition-transform active:scale-95 shadow-lg shadow-pink-500/20"
             >
-              [ZXC] ULTIMATE READY!
+              [XCV] ULTIMATE READY!
             </button>
           )}
         </div>
@@ -122,7 +122,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
               </span>
             ) : (
               <span className="text-[10px] text-slate-400 mt-0.5">
-                Stun boss with combos (XC, XZ, or ZXC Ultimate)
+                Stun boss with combos (XC, CV, or XCV Ultimate)
               </span>
             )}
           </div>
@@ -284,21 +284,21 @@ export const GameHUD: React.FC<GameHUDProps> = ({
         </div>
       )}
 
-      {/* Bottom Keyboard Controls Reference Line with Arrow Keys */}
+      {/* Bottom Keyboard Controls Reference Line with X, C, V Keys */}
       <div className="hidden md:flex justify-center items-center gap-4 text-xs text-slate-400 bg-slate-950/60 border border-slate-900 px-4 py-1.5 rounded-full mx-auto backdrop-blur-sm">
         <span><strong className="text-slate-200">← → / A D</strong> Move</span>
         <span>·</span>
-        <span><strong className="text-slate-200">Space / ↑ / W</strong> Jump</span>
+        <span><strong className="text-slate-200">Space / ↑</strong> Jump</span>
         <span>·</span>
-        <span><strong className="text-cyan-400">C</strong> Up Slash</span>
+        <span><strong className="text-cyan-400">X</strong> Down Slash</span>
         <span>·</span>
-        <span><strong className="text-cyan-400">X</strong> Mid Slash</span>
+        <span><strong className="text-cyan-400">C</strong> Mid Slash</span>
         <span>·</span>
-        <span><strong className="text-cyan-400">Z</strong> Down Slash</span>
+        <span><strong className="text-cyan-400">V</strong> Up Slash</span>
         <span>·</span>
-        <span><strong className="text-pink-400">XC / XZ / CZ</strong> Combos</span>
+        <span><strong className="text-pink-400">XC / CV / XV</strong> Combos</span>
         <span>·</span>
-        <span><strong className="text-pink-400">ZXC</strong> Ultimate Cleave</span>
+        <span><strong className="text-pink-400">XCV</strong> Ultimate Cleave</span>
       </div>
     </div>
   );

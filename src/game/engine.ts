@@ -12,6 +12,7 @@ import {
   SlashType,
   SlicedPart,
   GraphicQuality,
+  DifficultyMode,
 } from '../types/game';
 import {
   GRAVITY,
@@ -26,6 +27,7 @@ import {
   ENERGY_MAX,
   SABER_MAX_TIME,
   SABER_PICKUP_TIME,
+  DIFFICULTY_CONFIGS,
 } from './constants';
 import { GameRenderer } from './renderer';
 import { sound } from '../audio/soundEngine';
@@ -37,6 +39,7 @@ export class GameEngine {
 
   public state: GameState = 'TITLE';
   public quality: GraphicQuality = 'AUTO';
+  public difficulty: DifficultyMode = 'NORMAL';
   public isLowQualityActive: boolean = false;
   private fpsHistory: number[] = [];
   private lastFpsCheckTime: number = 0;
@@ -149,10 +152,23 @@ export class GameEngine {
     }
   }
 
+  public setDifficulty(mode: DifficultyMode) {
+    this.difficulty = mode;
+    const diffCfg = DIFFICULTY_CONFIGS[mode] || DIFFICULTY_CONFIGS.NORMAL;
+    if (diffCfg.isInfinite && this.player) {
+      this.player.saberActive = true;
+      this.player.saberTimer = 999;
+    }
+  }
+
   // --- INITIALIZE & START GAME ---
 
   public startGame() {
     this.player = this.createDefaultPlayer();
+    const diffCfg = DIFFICULTY_CONFIGS[this.difficulty] || DIFFICULTY_CONFIGS.NORMAL;
+    this.player.saberTimer = diffCfg.starterTimer;
+    this.player.saberActive = true;
+
     this.stats = this.createDefaultStats();
     this.enemies = [];
     this.platforms = [];
@@ -407,6 +423,32 @@ export class GameEngine {
     this.executeSlash(comboId);
   }
 
+  private touchComboStep: number = 0;
+
+  // Smart single-button touch attack that dynamically adapts to running, airborne, or ground combo chains
+  public triggerSmartTouchAttack() {
+    const p = this.player;
+    if (!p.saberActive) return;
+
+    // Airborne -> Sky Crescent Slash (C)
+    if (!p.isGrounded || Math.abs(p.vy) > 1.2) {
+      this.executeSlash('UP');
+      return;
+    }
+
+    // Fast running -> Forward Cross Cleave (X)
+    if (Math.abs(p.vx) > 2.5) {
+      this.executeSlash('MID');
+      return;
+    }
+
+    // Chain combos on successive taps: MID -> UP -> DOWN -> XC Vortex
+    const chain: SlashType[] = ['MID', 'UP', 'DOWN', 'COMBO_XC'];
+    const chosen = chain[this.touchComboStep % chain.length];
+    this.touchComboStep++;
+    this.executeSlash(chosen);
+  }
+
   // --- MAIN LOOP ---
 
   private loop = (currentTime: number) => {
@@ -512,6 +554,16 @@ export class GameEngine {
   }
 
   private updateSaberTimer(dt: number) {
+    const diffCfg = DIFFICULTY_CONFIGS[this.difficulty] || DIFFICULTY_CONFIGS.NORMAL;
+
+    // Infinite Saber mode: timer never decays!
+    if (diffCfg.isInfinite) {
+      this.player.saberActive = true;
+      this.player.saberTimer = 999;
+      this.stats.saberTotalActiveSeconds += dt;
+      return;
+    }
+
     if (this.player.saberActive) {
       this.player.saberTimer -= dt;
       this.stats.saberTotalActiveSeconds += dt;
@@ -645,42 +697,49 @@ export class GameEngine {
   private updateSlashAttacks(dt: number) {
     const p = this.player;
 
-    // Check Multi-key Combo Inputs:
-    // Ultimate Combo: Z + X + C
-    const hasZ = this.heldKeys.has('z') || this.justPressedKeys.has('z');
-    const hasX = this.heldKeys.has('x') || this.justPressedKeys.has('x');
-    const hasC = this.heldKeys.has('c') || this.justPressedKeys.has('c');
+    // Check Multi-key Combo Inputs (X, C, V - Optimized for German QWERTZ & International keyboards)
+    // Primary keys: X (Down/Low), C (Mid), V (Up)
+    // Z and Y are also accepted as aliases for X so no keyboard layout is hindered!
+    const isXHeld = this.heldKeys.has('x') || this.heldKeys.has('z') || this.heldKeys.has('y');
+    const isCHeld = this.heldKeys.has('c');
+    const isVHeld = this.heldKeys.has('v');
 
-    const justZ = this.justPressedKeys.has('z');
-    const justX = this.justPressedKeys.has('x');
+    const justX = this.justPressedKeys.has('x') || this.justPressedKeys.has('z') || this.justPressedKeys.has('y');
     const justC = this.justPressedKeys.has('c');
+    const justV = this.justPressedKeys.has('v');
 
-    // Triple key or high-energy combo
-    if (hasZ && hasX && hasC && (justZ || justX || justC)) {
-      this.executeSlash('ULTIMATE_ZXC');
+    // Triple key Ultimate: X + C + V
+    if (isXHeld && isCHeld && isVHeld && (justX || justC || justV)) {
+      this.executeSlash('ULTIMATE_XCV');
       return;
     }
 
-    // Dual key combos
-    if (hasX && hasC && (justX || justC)) {
+    // Dual key combos:
+    // X + C: Vortex Cyclone (360° spin)
+    if (isXHeld && isCHeld && (justX || justC)) {
       this.executeSlash('COMBO_XC');
       return;
     }
-    if (hasX && hasZ && (justX || justZ)) {
-      this.executeSlash('COMBO_XZ');
+    // C + V: Leaping Spiral Whirlwind
+    if (isCHeld && isVHeld && (justC || justV)) {
+      this.executeSlash('COMBO_CV');
       return;
     }
-    if (hasC && hasZ && (justC || justZ)) {
-      this.executeSlash('COMBO_CZ');
+    // X + V: Eclipse Cross Detonation
+    if (isXHeld && isVHeld && (justX || justV)) {
+      this.executeSlash('COMBO_XV');
       return;
     }
 
-    // Single Slashes
-    if (justC) {
+    // Single Slashes:
+    // V = Up Slash (Crescent sky arc)
+    // C = Mid Slash (Plasma cross cleave)
+    // X = Down Slash (Ground shockwave sweep)
+    if (justV) {
       this.executeSlash('UP');
-    } else if (justX) {
+    } else if (justC) {
       this.executeSlash('MID');
-    } else if (justZ) {
+    } else if (justX) {
       this.executeSlash('DOWN');
     }
 
@@ -961,12 +1020,74 @@ export class GameEngine {
           this.spawnProjectile(enemy.x, enemy.y + 15, 0, 4.5, '#ef4444', 15);
         }
       } else {
-        // Ground Rogue / Shield
-        if (distToPlayer < 350) {
-          const moveSpeed = enemy.type === 'SHIELD' ? 1.6 : 2.5;
-          enemy.vx = (p.x > enemy.x ? 1 : -1) * moveSpeed;
-          enemy.x += enemy.vx;
+        // Ground Rogue / Shield - Smart AI with Platform Cliff & Edge Detection
+        let onPlat: Platform | null = null;
+        for (const pl of this.platforms) {
+          if (
+            enemy.x + enemy.width > pl.x &&
+            enemy.x < pl.x + pl.width &&
+            enemy.y + enemy.height >= pl.y - 6 &&
+            enemy.y + enemy.height <= pl.y + 18 &&
+            enemy.vy >= 0
+          ) {
+            onPlat = pl;
+            break;
+          }
         }
+
+        if (onPlat) {
+          enemy.y = onPlat.y - enemy.height;
+          enemy.vy = 0;
+          enemy.isGrounded = true;
+
+          // Smart Chase & Edge Detection AI
+          if (distToPlayer < 450) {
+            const moveSpeed = enemy.type === 'SHIELD' ? 1.6 : 2.6;
+            const desiredDir = p.x > enemy.x ? 1 : -1;
+            enemy.facingRight = desiredDir > 0;
+            const proposedVx = desiredDir * moveSpeed;
+            const futureX = enemy.x + proposedVx;
+
+            // Check if walking further would step off the platform edge (cliff detection!)
+            const atLeftEdge = futureX < onPlat.x + 14;
+            const atRightEdge = futureX + enemy.width > onPlat.x + onPlat.width - 14;
+
+            if (atLeftEdge || atRightEdge) {
+              // Enemy reached platform edge!
+              // Check if player is on an adjacent platform across a small gap
+              const isPlayerNearGap = Math.abs(p.x - enemy.x) < 140 && Math.abs(p.y - enemy.y) < 70;
+              if (isPlayerNearGap && enemy.type !== 'SHIELD' && Math.random() < 0.08) {
+                // Tactical leap jump towards player!
+                enemy.vy = -10.5;
+                enemy.vx = desiredDir * 4.5;
+                enemy.isGrounded = false;
+              } else {
+                // STOP AT THE EDGE! Never fall off like an idiot!
+                enemy.vx = 0;
+              }
+            } else {
+              enemy.vx = proposedVx;
+            }
+          } else {
+            // Idle patrol pacing back and forth on current platform without falling off
+            if (enemy.vx === 0) enemy.vx = enemy.facingRight ? 1.0 : -1.0;
+            if (enemy.x < onPlat.x + 16) {
+              enemy.vx = 1.0;
+              enemy.facingRight = true;
+            } else if (enemy.x + enemy.width > onPlat.x + onPlat.width - 16) {
+              enemy.vx = -1.0;
+              enemy.facingRight = false;
+            }
+          }
+        } else {
+          // In the air: apply gravity
+          enemy.vy += GRAVITY;
+          enemy.isGrounded = false;
+        }
+
+        // Apply horizontal & vertical velocity
+        enemy.x += enemy.vx;
+        enemy.y += enemy.vy;
 
         // Melee hit check against unarmed stickman
         if (distToPlayer < 36 && p.invulnerableTimer <= 0) {
@@ -1070,10 +1191,18 @@ export class GameEngine {
       if (dist < 42) {
         pk.collected = true;
 
-        // Add 5 seconds to lightsaber, up to MAX 60s
-        const prevTimer = p.saberTimer;
-        p.saberTimer = Math.min(SABER_MAX_TIME, p.saberTimer + pk.bonusSeconds);
-        const added = Math.round(p.saberTimer - prevTimer);
+        const diffCfg = DIFFICULTY_CONFIGS[this.difficulty] || DIFFICULTY_CONFIGS.NORMAL;
+        if (diffCfg.isInfinite) {
+          p.saberTimer = 999;
+          p.saberActive = true;
+          this.spawnDamageNumber(pk.x, pk.y - 20, '∞ INFINITE SABER!', '#ec4899', true);
+        } else {
+          const bonus = diffCfg.pickupBonus > 0 ? diffCfg.pickupBonus : pk.bonusSeconds;
+          const prevTimer = p.saberTimer;
+          p.saberTimer = Math.min(diffCfg.maxTimer, p.saberTimer + bonus);
+          const added = Math.round(p.saberTimer - prevTimer);
+          this.spawnDamageNumber(pk.x, pk.y - 20, `+${added > 0 ? added : bonus}s SABER!`, '#00f0ff', true);
+        }
 
         p.saberActive = true;
         this.stats.saberPickupsCollected++;
@@ -1082,7 +1211,6 @@ export class GameEngine {
         sound.playPickup();
         sound.startSaberHum();
 
-        this.spawnDamageNumber(pk.x, pk.y - 20, `+${added}s SABER!`, '#00f0ff', true);
         this.spawnExplosion(pk.x, pk.y, '#00f0ff', 12);
       }
     });

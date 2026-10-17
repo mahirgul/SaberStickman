@@ -30,6 +30,7 @@ export function getDefaultSaveData(): UserSaveData {
     audioVolume: 0.7,
     isMuted: false,
     quality: 'AUTO',
+    difficulty: 'NORMAL',
     updatedAt: new Date().toISOString(),
   };
 }
@@ -117,6 +118,7 @@ export async function fetchFromCloud(syncCode: string): Promise<UserSaveData | n
         audioVolume: 0.7,
         isMuted: false,
         quality: 'AUTO',
+        difficulty: p.difficulty || 'NORMAL',
         updatedAt: p.updatedAt,
       };
       saveLocal(loaded);
