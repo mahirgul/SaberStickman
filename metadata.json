@@ -1,0 +1,7 @@
+{
+  "name": "Saber Stickman: Neon Edge",
+  "description": "Fast-paced 2D neon stickman action platformer. Grab your lightsaber, slice enemies with dynamic combos, defeat bosses, and sync your high scores across devices.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

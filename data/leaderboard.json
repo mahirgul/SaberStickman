@@ -1,0 +1,57 @@
+[
+  {
+    "id": "score-1792261903465-1jka",
+    "playerName": "CyberAce",
+    "score": 21350,
+    "maxCombo": 45,
+    "stageReached": 6,
+    "bossesDefeated": 3,
+    "totalKills": 104,
+    "saberActiveTime": 180,
+    "date": "2026-10-17T18:31:43.465Z"
+  },
+  {
+    "id": "score-1",
+    "playerName": "CyberNinja_99",
+    "score": 18450,
+    "maxCombo": 42,
+    "stageReached": 5,
+    "bossesDefeated": 2,
+    "totalKills": 86,
+    "saberActiveTime": 145,
+    "date": "2026-10-16T18:31:38.524Z"
+  },
+  {
+    "id": "score-2",
+    "playerName": "NeonViper",
+    "score": 14200,
+    "maxCombo": 31,
+    "stageReached": 4,
+    "bossesDefeated": 1,
+    "totalKills": 64,
+    "saberActiveTime": 112,
+    "date": "2026-10-15T18:31:38.524Z"
+  },
+  {
+    "id": "score-3",
+    "playerName": "StickMaster_X",
+    "score": 11800,
+    "maxCombo": 28,
+    "stageReached": 3,
+    "bossesDefeated": 1,
+    "totalKills": 51,
+    "saberActiveTime": 95,
+    "date": "2026-10-14T18:31:38.524Z"
+  },
+  {
+    "id": "score-4",
+    "playerName": "BladeRunner",
+    "score": 9400,
+    "maxCombo": 22,
+    "stageReached": 3,
+    "bossesDefeated": 1,
+    "totalKills": 40,
+    "saberActiveTime": 78,
+    "date": "2026-10-13T18:31:38.524Z"
+  }
+]
